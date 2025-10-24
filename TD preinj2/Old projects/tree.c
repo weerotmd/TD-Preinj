@@ -193,16 +193,7 @@ TreeNode* makeLeftTree(int h) {
   return root;
 }
 
-void displayTree(TreeNode* root) {
-  TreeNode* pos = root;
-  while (pos != NULL) {
-    printf("%d", pos->value);
-    pos = pos->left;
-    if (pos != NULL) printf("->");
-  };
-  printf("\n");
-}
-void printTree(TreeNode *root, int space) {
+void printTree(TreeNode *root, int space) {//ChatGPT function
     if (root == NULL) return;
     // Increase distance between levels
     int indent = 5;
