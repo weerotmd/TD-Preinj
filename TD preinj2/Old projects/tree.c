@@ -105,8 +105,6 @@ void deleteRightChild(TreeNode** treeNode) {
 }
 int leafCount(TreeNode* treeNode) {
   int leaves = 0;
-  hasLeftChild(treeNode);
-  hasRightChild(treeNode);
   if (treeNode == NULL) return 1;
   QueueNode* queue = NULL;
   pushQueueNode(&queue, treeNode);
@@ -117,6 +115,46 @@ int leafCount(TreeNode* treeNode) {
     if (hasRightChild(node)) pushQueueNode(&queue, node->right);
   }
   return leaves;
+}
+int treeSize(TreeNode* treeNode) {
+  int size = 0;
+  if (treeNode == NULL) return 1;
+  QueueNode* queue = NULL;
+  pushQueueNode(&queue, treeNode);
+  while (queue != NULL) {
+    TreeNode* node = shiftQueueNode(&queue);
+    if (!isLeaf(node)) size++;
+    if (hasLeftChild(node)) pushQueueNode(&queue, node->left);
+    if (hasRightChild(node)) pushQueueNode(&queue, node->right);
+  }
+  return size;
+}
+int treeHeight(TreeNode* treeNode) {
+  if (treeNode == NULL) return -1;
+  int left = treeHeight(treeNode->left);
+  int right = treeHeight(treeNode->right);
+  return 1 + (left > right ? left : right);
+}
+int isFiliform(TreeNode* treeNode) {
+  if (treeNode == NULL) return 1;
+  TreeNode* pos = treeNode;
+  while (pos != NULL) {
+    if (hasLeftChild(pos) && hasRightChild(pos)) return 0;
+    if (hasLeftChild(pos)) pos = pos->left;
+    else if (hasRightChild(pos)) pos = pos->right;
+    else return 1;
+  }
+  return 1;
+}
+int isLeftOnly(TreeNode* treeNode) {
+  if (treeNode == NULL) return 1;
+  TreeNode* pos = treeNode;
+  while (pos != NULL) {
+    if (hasRightChild(pos)) return 0;
+    if (hasLeftChild(pos)) pos = pos->left;
+    else return 1;
+  }
+  return 1;
 }
 
 void preorderTraversal(TreeNode* root) {
@@ -143,6 +181,18 @@ void breadthfirstTraversal(TreeNode* root) {
   }
   printf("\n");
 }
+
+TreeNode* makeLeftTree(int h) {
+  TreeNode* root = makeTreeNode(1);
+  TreeNode* pos = root;
+  srand(time(NULL));
+  for (size_t i = 0; i < h; i++) {
+    addLeftChild(&pos, rand()%11);
+    pos = pos->left;
+  }
+  return root;
+}
+
 void displayTree(TreeNode* root) {
   TreeNode* pos = root;
   while (pos != NULL) {
@@ -173,22 +223,33 @@ int main(int argc, char const *argv[]) {
   displayTreeNode(root);
   addLeftChild(&root, 2);
   addLeftChild(&root->left, 3);
-  addLeftChild(&root->left->left, 4);
-  addRightChild(&root->left->left, 5);
-  addRightChild(&root->left, 6);
-  addRightChild(&root->left->right, 7);
+  addRightChild(&root->left->left, 4);
+  //addRightChild(&root->left->left, 5);
+  //addRightChild(&root->left, 6);
+  //addRightChild(&root->left->right, 7);
   addRightChild(&root, 8);
-  addLeftChild(&root->right, 9);
-  addRightChild(&root->right, 10);
+  //addLeftChild(&root->right, 9);
+  //addRightChild(&root->right, 10);
   printTree(root, 0);
   preorderTraversal(root);
   printf("\n");
   postorderTraversal(root);
   printf("\n");
-  breadthfirstTraversal(root);
   printf("Leaves: %d\n", leafCount(root));
-  deleteLeftChild(&root);
+  printf("Tree size: %d\n", treeSize(root));
+  printf("Tree height: %d\n", treeHeight(root));
+  printf("Filiform: %d\n", isFiliform(root));
+  printf("Left Only: %d\n", isLeftOnly(root));
+  deleteRightChild(&root);
+  deleteRightChild(&root->left->left);
+  addLeftChild(&root->left->left, 10);
+  breadthfirstTraversal(root);
   printTree(root, 0);
   printf("Leaves: %d\n", leafCount(root));
+  printf("Tree size: %d\n", treeSize(root));
+  printf("Tree height: %d\n", treeHeight(root));
+  printf("Filiform: %d\n", isFiliform(root));
+  printf("Left Only: %d\n", isLeftOnly(root));
+  printTree(makeLeftTree(6), 0);
   return 0;
 }
