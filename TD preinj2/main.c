@@ -16,7 +16,6 @@ TreeNode* makeTreeNode(int value) {
   return treeNode;
 }
 
-
 typedef struct _queueNode{
   TreeNode* treeNode;
   struct _queueNode* next;
@@ -105,8 +104,6 @@ void deleteRightChild(TreeNode** treeNode) {
 }
 int leafCount(TreeNode* treeNode) {
   int leaves = 0;
-  hasLeftChild(treeNode);
-  hasRightChild(treeNode);
   if (treeNode == NULL) return 1;
   QueueNode* queue = NULL;
   pushQueueNode(&queue, treeNode);
@@ -118,17 +115,42 @@ int leafCount(TreeNode* treeNode) {
   }
   return leaves;
 }
+int treeSize(TreeNode* treeNode) {
+  int size = 0;
+  if (treeNode == NULL) return 1;
+  QueueNode* queue = NULL;
+  pushQueueNode(&queue, treeNode);
+  while (queue != NULL) {
+    TreeNode* node = shiftQueueNode(&queue);
+    if (!isLeaf(node)) size++;
+    if (hasLeftChild(node)) pushQueueNode(&queue, node->left);
+    if (hasRightChild(node)) pushQueueNode(&queue, node->right);
+  }
+  return size;
+}
+int treeHeight(TreeNode* treeNode) {
+  if (treeNode == NULL) return -1;
+  int left = treeHeight(treeNode->left);
+  int right = treeHeight(treeNode->right);
+  return 1 + (left > right ? left : right);
+}
 
+void inorderTraversal(TreeNode* root) {
+  if (root == NULL) return;
+  inorderTraversal(root->left);
+  printf("%d ", root->value);
+  inorderTraversal(root->right);
+}
 void preorderTraversal(TreeNode* root) {
   if (root == NULL) return;
   printf("%d, ", root->value);
-  if (hasLeftChild(root)) preorderTraversal(root->left);
-  if (hasRightChild(root)) preorderTraversal(root->right);
+  preorderTraversal(root->left);
+  preorderTraversal(root->right);
 }
 void postorderTraversal(TreeNode* root) {
   if (root == NULL) return;
-  if (hasLeftChild(root)) postorderTraversal(root->left);
-  if (hasRightChild(root)) postorderTraversal(root->right);
+  postorderTraversal(root->left);
+  postorderTraversal(root->right);
   printf("%d, ", root->value);
 }
 void breadthfirstTraversal(TreeNode* root) {
@@ -143,16 +165,55 @@ void breadthfirstTraversal(TreeNode* root) {
   }
   printf("\n");
 }
-void displayTree(TreeNode* root) {
-  TreeNode* pos = root;
-  while (pos != NULL) {
-    printf("%d", pos->value);
-    pos = pos->left;
-    if (pos != NULL) printf("->");
-  };
-  printf("\n");
+
+TreeNode* addChildBST(TreeNode** treeNode, int n) {
+  if (*treeNode == NULL) *treeNode = makeTreeNode(n);
+  else if (n < element(*treeNode)) {
+    (*treeNode)->left = addChildBST(&(*treeNode)->left, n);
+  }
+  else if (n > element(*treeNode)) {
+    (*treeNode)->right = addChildBST(&(*treeNode)->right, n);
+  }
+  return *treeNode;
 }
-void printTree(TreeNode *root, int space) {
+TreeNode* deleteMax(TreeNode** tree, int* nodeToDelete) {
+  TreeNode* biggestNode = *tree;
+  if (hasRightChild(*tree)) {
+    (*tree)->right = deleteMax(&(*tree)->right, nodeToDelete);
+  }
+  else {
+    *nodeToDelete = (*tree)->value;
+    biggestNode = *tree;
+    *tree = (*tree)->left;
+    free(biggestNode);
+  }
+  return *tree;
+}
+TreeNode* deleteElementBST(TreeNode** treeNode, int n) {
+  if (*treeNode == NULL) return *treeNode;
+  else if (n > (*treeNode)->value) {
+    (*treeNode)->right = deleteElementBST(&(*treeNode)->right, n);
+  }
+  else if (n < (*treeNode)->value) {
+    (*treeNode)->left = deleteElementBST(&(*treeNode)->left, n);
+  }
+  else if (!hasLeftChild(*treeNode)) {
+    TreeNode* rightNode = *treeNode;
+    *treeNode = (*treeNode)->right;
+    free(rightNode);
+  }
+  else if (!hasRightChild(*treeNode)) {
+    TreeNode* leftNode = *treeNode;
+    *treeNode = (*treeNode)->left;
+    free(leftNode);
+  }
+  else {
+    (*treeNode)->left = deleteMax(&(*treeNode)->left, &(*treeNode)->value);
+  }
+  return *treeNode;
+}
+
+void printTree(TreeNode *root, int space) {//ChatGPT function
     if (root == NULL) return;
     // Increase distance between levels
     int indent = 5;
@@ -169,26 +230,23 @@ void printTree(TreeNode *root, int space) {
 }
 
 int main(int argc, char const *argv[]) {
-  TreeNode* root = makeTreeNode(1);
-  displayTreeNode(root);
-  addLeftChild(&root, 2);
-  addLeftChild(&root->left, 3);
-  addLeftChild(&root->left->left, 4);
-  addRightChild(&root->left->left, 5);
-  addRightChild(&root->left, 6);
-  addRightChild(&root->left->right, 7);
-  addRightChild(&root, 8);
-  addLeftChild(&root->right, 9);
-  addRightChild(&root->right, 10);
+  TreeNode* root = makeTreeNode(10);
+  //displayTreeNode(root);
+  addChildBST(&root, 3);
+  addChildBST(&root, 5);
+  addChildBST(&root, 15);
+  addChildBST(&root, 20);
+  addChildBST(&root, 12);
+  addChildBST(&root, 7);
+  addChildBST(&root, 45);
+  addChildBST(&root, 9);
   printTree(root, 0);
-  preorderTraversal(root);
+  inorderTraversal(root);
   printf("\n");
-  postorderTraversal(root);
-  printf("\n");
-  breadthfirstTraversal(root);
-  printf("Leaves: %d\n", leafCount(root));
-  deleteLeftChild(&root);
+  deleteElementBST(&root, 5);
+  deleteElementBST(&root, 12);
   printTree(root, 0);
-  printf("Leaves: %d\n", leafCount(root));
+  inorderTraversal(root);
+  printf("\n");
   return 0;
 }
